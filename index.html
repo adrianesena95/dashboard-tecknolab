@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TECKNOLAB | Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://script.google.com/macros/s/AKfycby8yol8L_sfUW6cY5Lc6Y-GkfwtdI5Yy6NNEb1qqORbGdDqe8SW5QzBntZlWBCvEQE0yA/exec" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  
+  <style>
+    :root {
+      --bg: #030816;
+      --panel: #07122a;
+      --panel2: #0b1731;
+      --line: #14305f;
+      --cyan: #00e5ff;
+      --cyan2: #00bcd4;
+      --white: #f6fbff;
+      --muted: #9ab2c9;
+      --danger: #ff5d7a;
+      --ok: #46f7b1;
+    }
+
+    * { box-sizing: border-box; }
+    
+    body {
+      margin: 0;
+      font-family: Inter, sans-serif;
+      background: radial-gradient(circle at top, #0a1636 0, #030816 45%, #02040b 100%);
+      color: var(--white);
+      min-height: 100vh;
+    }
+
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(0, 229, 255, 0.05); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb { background: rgba(0, 229, 255, 0.2); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(0, 229, 255, 0.5); }
+
+    .wrap {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 18px;
+    }
+
+    .header {
+      display: flex;
+      gap: 16px;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding: 18px 22px;
+      background: linear-gradient(180deg, rgba(6,16,38,.88), rgba(4,10,24,.65));
+      border: 1px solid rgba(0,229,255,.18);
+      border-radius: 22px;
+      box-shadow: 0 0 0 1px rgba(255,255,255,.03), 0 18px 60px rgba(0,0,0,.35);
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-family: Orbitron, sans-serif;
+      font-size: clamp(2rem, 4vw, 3.6rem);
+      letter-spacing: .18em;
+      color: var(--cyan);
+      text-shadow: 0 0 16px rgba(0,229,255,.35);
+    }
+
+    .brand p {
+      margin: .2rem 0 0;
+      color: var(--white);
+      letter-spacing: .22em;
+      font-size: .78rem;
+      opacity: .9;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    select, .btn {
+      background: rgba(9,18,40,.9);
+      color: var(--white);
+      border: 1px solid rgba(0,229,255,.25);
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-weight: 600;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    select:focus, .btn:hover {
+      border-color: rgba(0,229,255,.7);
+      box-shadow: 0 0 0 3px rgba(0,229,255,.08);
+    }
+
+    .btn { cursor: pointer; }
+    .btn.active {
+      background: linear-gradient(135deg, rgba(0,229,255,.2), rgba(0,229,255,.05));
+      color: var(--cyan);
+      box-shadow: inset 0 0 0 1px rgba(0,229,255,.3);
+    }
+    
+    #refreshBtn {
+      background: linear-gradient(135deg, rgba(0,229,255,.15), rgba(0,229,255,.02));
+      border-color: var(--cyan);
+      color: var(--cyan);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    #refreshBtn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 16px 0;
+    }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(8,18,43,.88), rgba(4,10,24,.92));
+      border: 1px solid rgba(0,229,255,.14);
+      border-radius: 20px;
+      padding: 16px;
+      box-shadow: 0 12px 50px rgba(0,0,0,.28);
+      min-width: 0; 
+    }
+
+    .grid-kpi {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .kpi {
+      background: linear-gradient(180deg, rgba(11,23,49,.96), rgba(6,14,32,.95));
+      border: 1px solid rgba(0,229,255,.14);
+      border-radius: 18px;
+      padding: 16px;
+      min-height: 104px;
+      min-width: 0; 
+    }
+
+    .kpi .label { font-size: .78rem; color: var(--muted); text-transform: uppercase; letter-spacing: .12em; }
+    .kpi .value { font-size: 1.7rem; font-weight: 800; margin-top: 10px; color: var(--white); }
+    .kpi .sub { font-size: .82rem; color: var(--muted); margin-top: 6px; }
+
+    .grid-main {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .grid-individual {
+      display: grid;
+      grid-template-columns: .9fr 1.1fr;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(11,23,49,.94), rgba(6,14,32,.95));
+      border: 1px solid rgba(0,229,255,.14);
+      border-radius: 18px;
+      padding: 14px;
+      min-width: 0; 
+    }
+
+    .card h3 {
+      margin: 0 0 12px;
+      font-size: 1rem;
+      color: var(--cyan);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 280px; 
+      width: 100%;
+    }
+
+    table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+    th, td { padding: 10px; border-bottom: 1px solid rgba(154,178,201,.12); vertical-align: top; }
+    th { text-align: left; color: var(--muted); font-weight: 700; font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; }
+    td { color: var(--white); word-break: break-word; } 
+
+    .table-wrap { overflow: auto; max-height: 430px; border-radius: 14px; }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: .74rem;
+      font-weight: 700;
+    }
+
+    .ok { background: rgba(70,247,177,.12); color: var(--ok); border: 1px solid rgba(70,247,177,.2); }
+    .bad { background: rgba(255,93,122,.12); color: #ff98aa; border: 1px solid rgba(255,93,122,.2); }
+    .muted { color: var(--muted); }
+
+    .ranking {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 430px; 
+      overflow-y: auto;
+      padding-right: 5px;
+    }
+
+    .rank-item {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 12px;
+      border: 1px solid rgba(0,229,255,.12);
+      border-radius: 14px;
+      background: rgba(255,255,255,.02);
+    }
+
+    .rank-num { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; background: rgba(0,229,255,.12); color: var(--cyan); font-weight: 800; }
+    .rank-name { font-weight: 700; }
+    .rank-meta { font-size: .8rem; color: var(--muted); }
+
+    .hidden { display: none !important; }
+    .statusbar { margin-top: 12px; color: var(--muted); font-size: .85rem; }
+    .empty { padding: 18px; text-align: center; color: var(--muted); }
+
+    @media (max-width: 1100px) {
+      .grid-kpi { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid-main, .grid-individual { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .header { flex-direction: column; align-items: flex-start; }
+      .controls { justify-content: flex-start; }
+      .grid-kpi { grid-template-columns: 1fr; }
+      .brand p { letter-spacing: .12em; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div class="brand">
+      <h1>TECKNOLAB</h1>
+      <p>SERVIÇOS DE TESTE E MEDIÇÃO</p>
+    </div>
+    <div class="controls">
+      <!-- Botão de Atualização Manual Adicionado -->
+      <button id="refreshBtn" class="btn" onclick="manualRefresh()">
+        <span>🔄</span> Atualizar Dados
+      </button>
+      
+      <select id="periodFilter">
+        <option value="geral">Geral</option>
+        <option value="hoje">Hoje</option>
+        <option value="7">Últimos 7 dias</option>
+        <option value="30">Últimos 30 dias</option>
+      </select>
+      <select id="techFilter"></select>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="btn active" data-tab="general">Visão Geral da Equipe</button>
+    <button class="btn" data-tab="individual">Visão Individual</button>
+  </div>
+
+  <div id="generalTab" class="panel">
+    <div class="grid-kpi">
+      <div class="kpi"><div class="label">Total de Horas</div><div class="value" id="kpiHours">--</div><div class="sub">Soma da duração filtrada</div></div>
+      <div class="kpi"><div class="label">Eficiência Geral</div><div class="value" id="kpiEff">--</div><div class="sub">Status Concluído / total</div></div>
+      <div class="kpi"><div class="label">Tarefas Pendentes</div><div class="value" id="kpiPend">--</div><div class="sub">Registros não concluídos</div></div>
+      <div class="kpi"><div class="label">Qualificações</div><div class="value" id="kpiQual">--</div><div class="sub">Ações de Treinamento</div></div>
+    </div>
+    <div class="grid-main">
+      <div class="card">
+        <h3>Carga por Departamento</h3>
+        <div class="chart-container">
+          <canvas id="deptChart"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Investimento de Tempo</h3>
+        <div class="chart-container">
+          <canvas id="mixChart"></canvas>
+        </div>
+      </div>
+    </div>
+    <div style="height:12px"></div>
+    <div class="card">
+      <h3>Últimos Gargalos</h3>
+      <div class="table-wrap" id="bottleneckTable"></div>
+    </div>
+  </div>
+
+  <div id="individualTab" class="panel hidden">
+    <div class="grid-individual">
+      <div class="card">
+        <h3>Ranking de Eficiência</h3>
+        <div class="ranking" id="rankingList"></div>
+      </div>
+      <div>
+        <div class="grid-kpi" style="margin-bottom:12px">
+          <div class="kpi"><div class="label">Eficiência Individual</div><div class="value" id="techEff">--</div><div class="sub">Taxa de conclusão do técnico</div></div>
+          <div class="kpi"><div class="label">Horas Alocadas</div><div class="value" id="techHours">--</div><div class="sub">Total de duração filtrada</div></div>
+          <div class="kpi"><div class="label">Procedimentos Únicos</div><div class="value" id="techProc">--</div><div class="sub">Itens distintos executados</div></div>
+          <div class="kpi"><div class="label">Atividades</div><div class="value" id="techActs">--</div><div class="sub">Total de registros</div></div>
+        </div>
+        <div class="card">
+          <h3>Histórico do Técnico</h3>
+          <div class="table-wrap" id="historyTable"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="statusbar" id="statusBar">Carregando dados...</div>
+</div>
+
+<script>
+const LIVE_URL = "https://docs.google.com/spreadsheets/d/1ojqDletct5yLCPXzFtIFvBEndLwRfK318UMKBeSPBBs/gviz/tq?tqx=out:csv&sheet=Dados";
+const FALLBACK_CSV = "\"Colaborador\",\"Departamento\",\"A\u00e7\u00e3o\",\"Instrumento Calibrado\",\"Procedimentos Executados\",\"Per\u00edodo\",\"Data\",\"Dura\u00e7\u00e3o\",\"Status\",\"Anota\u00e7\u00f5es\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"C\u00e1tia\",\"Administrativo\",\"Treinamento\",\"\",\"Sim\",\"\",\"\",\"\",\"28/04/2026\",\"02:00:00\",\"Conclu\u00eddo\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"C\u00e1tia\",\"Comercial\",\"Tarefa\",\"\"\"TRENA, STARRETT\"\"\",\"SQB-0010 -  Resist\u00eancia, SQB-0011 - Volts DC, SQB-0012 - Volts AC\",\"integral\",\"29/04/2026\",\"08:00:00\",\"Conclu\u00eddo\",\"mmmmmmm\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"Pedro\",\"Lab. El\u00e9trica \",\"Tarefa\",\"DECA DE CAPACITORES\",\"SQB-0010 -  Resist\u00eancia\",\"manh\u00e3\",\"29/04/2026\",\"06:00:00\",\"Conclu\u00eddo\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"Adriane\",\"Lab. El\u00e9trica \",\"Tarefa\",\"DECA DE CAPACITORES, D\u00c9CADA DE INDUTORES\",\"Sim\",\"SQB-0010 -  Resist\u00eancia, SQB-0011 - Volts DC, SQB-0012 - Volts AC\",\"\",\"\",\"29/04/2026\",\"08:00:00\",\"Conclu\u00eddo\",\"ddddddd\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"Adriane\",\"Lab. El\u00e9trica \",\"Tarefa\",\"DECA DE CAPACITORES\",\"SQB-0010 -  Resist\u00eancia\",\"manh\u00e3\",\"29/04/2026\",\"06:00:00\",\"Conclu\u00eddo\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"Guilherme\",\"Lab. El\u00e9trica \",\"Tarefa\",\"DECA DE CAPACITORES, D\u00c9CADA DE INDUTORES\",\"SQB-0010 -  Resist\u00eancia, SQB-0013 - Ampere AC e Amp\u00e9re DC\",\"integral\",\"29/04/2026\",\"08:00:00\",\"Conclu\u00eddo\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"Guilherme\",\"Lab. Manuten\u00e7\u00e3o\",\"Treinamento\",\"PONTE RLC, MEDIDOR DE POT\u00caNCIA DE RF\",\"SQB-0012 - Volts AC, SQB-0013 - Ampere AC e Amp\u00e9re DC, SQB-0014 - Tempo e Freq\u00eancia, SQB-0015 - N\u00edvel de Sinal\",\"tarde\",\"29/04/2026\",\"04:00:00\",\"Conclu\u00eddo\",\"GGGGGGGG\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"Pedro\",\"Lab. El\u00e9trica \",\"Treinamento\",\"DECA DE CAPACITORES\",\"SQB-0010 -  Resist\u00eancia\",\"integral\",\"29/04/2026\",\"08:00:00\",\"Pendente\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"Pedro\",\"Lab. El\u00e9trica \",\"Tarefa\",\"MEDIDOR DE POT\u00caNCIA DE RF\",\"SQB-0010 -  Resist\u00eancia\",\"manh\u00e3\",\"29/04/2026\",\"06:00:00\",\"Conclu\u00eddo\",\"FFFFFFFFFF\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"C\u00e1tia\",\"Administrativo\",\"Tarefa\",\"\",\"SQB-0010 -  Resist\u00eancia\",\"integral\",\"29/04/2026\",\"08:00:00\",\"Conclu\u00eddo\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"C\u00e1tia\",\"\",\"\",\"\",\"\",\"\",\"29/04/2026\",\"00:00:00\",\"\",\"EMISSAO DE NOTAS\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"C\u00e1tia\",\"Administrativo\",\"Treinamento\",\"\",\"\",\"integral\",\"29/04/2026\",\"08:00:00\",\"Conclu\u00eddo\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"Adriane\",\"\",\"\",\"\",\"\",\"\",\"29/04/2026\",\"00:00:00\",\"\",\"emiti notas\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"C\u00e1tia\",\"Administrativo\",\"Tarefa\",\"\",\"\",\"integral\",\"29/04/2026\",\"08:00:00\",\"Conclu\u00eddo\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"C\u00e1tia\",\"Administrativo\",\"Tarefa\",\"\",\"\",\"manh\u00e3\",\"29/04/2026\",\"06:00:00\",\"Conclu\u00eddo\",\"Abertura de OS. Baixa de OS no sistema.\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"C\u00e1tia\",\"Administrativo\",\"Treinamento\",\"MULT\u00cdMETRO DIGITAL\",\"\",\"tarde\",\"29/04/2026\",\"04:00:00\",\"Conclu\u00eddo\",\"Emiss\u00e3o de certificados.\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"";
+const REF_DATE = new Date(2026, 4, 4);
+const cols = ['Colaborador','Departamento','Ação','Instrumento Calibrado','Procedimentos Executados','Período','Data','Duração','Status','Anotações'];
+let rawData = [], filtered = [], deptChart = null, mixChart = null, activeTab = 'general';
+
+function parseCSV(text){ 
+  const rows=[]; let row=[], cur='', q=false; 
+  for(let i=0;i<text.length;i++){ 
+    const c=text[i], n=text[i+1]; 
+    if(c==='"'){ 
+      if(q && n==='"'){cur+='"'; i++;} 
+      else q=!q; 
+    } else if(c===',' && !q){ 
+      row.push(cur); cur=''; 
+    } else if((c==='\n' || c==='\r') && !q){ 
+      if(c==='\r' && n==='\n') i++; 
+      row.push(cur); rows.push(row); row=[]; cur=''; 
+    } else cur+=c; 
+  } 
+  if(cur!=='' || row.length){ row.push(cur); rows.push(row); } 
+  return rows; 
+}
+function clean(v){ return (v ?? '').toString().trim(); }
+function isDate(s){ return /^\d{2}\/\d{2}\/\d{4}$/.test(clean(s)); }
+function isDuration(s){ return /^\d{2}:\d{2}:\d{2}$/.test(clean(s)); }
+function parseDateBR(s){ 
+  s=clean(s); const m=s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/); 
+  return m ? new Date(+m[3], +m[2]-1, +m[1]) : null; 
+}
+function parseDuration(s){ 
+  s=clean(s); const m=s.match(/^(\d{2}):(\d{2}):(\d{2})$/); 
+  return m ? (+m[1])*3600 + (+m[2])*60 + (+m[3]) : 0; 
+}
+function fmtHM(sec){ 
+  sec = Math.max(0, Math.round(sec)); 
+  const h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60); 
+  return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0'); 
+}
+function pct(n){ return (n*100).toFixed(1).replace('.',',') + '%'; }
+function normalizeRow(r){ 
+  const o={}; 
+  cols.forEach(c=>o[c]=clean(r[c])); 
+  Object.keys(r).forEach(k=>{ if(k.startsWith('Unnamed:') && !o[k]) o[k]=clean(r[k]); });  
+  if(!o['Data'] && isDate(o['Status']) && isDuration(o['Anotações']) && ['Concluído','Pendente'].includes(clean(o['Unnamed: 10']))){ 
+    o['Data']=o['Status']; o['Duração']=o['Anotações']; o['Status']=o['Unnamed: 10']; o['Anotações']=clean(o['Unnamed: 11']); 
+  }  
+  if(!o['Status']){ 
+    const extra = Object.keys(o).filter(k=>k.startsWith('Unnamed:')).map(k=>clean(o[k])).find(v=>['Concluído','Pendente'].includes(v)); 
+    if(extra) o['Status']=extra; 
+  }  
+  o['Departamento'] = clean(o['Departamento']).replace(/\s+/g,' ');  
+  return o;
+}
+function filterByPeriod(rows){ 
+  const p=document.getElementById('periodFilter').value; 
+  if(p==='geral') return rows; 
+  const start = new Date(REF_DATE); 
+  start.setDate(REF_DATE.getDate() - (p==='7' ? 7 : 30)); 
+  return rows.filter(r=>{ const d=parseDateBR(r.Data); return d && d >= start && d < REF_DATE; }); 
+}
+function currentRows(){ return filterByPeriod(rawData); }
+function groupCount(rows, key){ 
+  const m=new Map(); 
+  rows.forEach(r=>{ const k=clean(r[key]) || 'Sem informação'; m.set(k,(m.get(k)||0)+1); }); 
+  return [...m.entries()].sort((a,b)=>b[1]-a[1]); 
+}
+function techStats(rows, tech){ 
+  const r=rows.filter(x=>clean(x['Colaborador'])===tech); 
+  const concl = r.filter(x=>clean(x['Status'])==='Concluído').length; 
+  const secs = r.reduce((a,x)=>a+parseDuration(x['Duração']),0); 
+  const procs = new Set(); 
+  r.forEach(x=>clean(x['Procedimentos Executados']).split(',').forEach(p=>{ p=clean(p); if(p && p.toLowerCase()!=='sim') procs.add(p); })); 
+  return { total:r.length, concl, eff:r.length?concl/r.length:0, secs, procs:procs.size }; 
+}
+function renderTable(container, headers, rows){ 
+  if(!rows.length){ container.innerHTML = '<div class="empty">Nenhum registro encontrado.</div>'; return; } 
+  let html = '<table><thead><tr>' + headers.map(h=>`<th>${h}</th>`).join('') + '</tr></thead><tbody>'; 
+  rows.forEach(r=>{ html += '<tr>' + headers.map(h=>`<td>${r[h] ?? ''}</td>`).join('') + '</tr>'; }); 
+  html += '</tbody></table>'; container.innerHTML = html; 
+}
+function renderGeneral(rows){ 
+  const hours = rows.reduce((a,x)=>a+parseDuration(x['Duração']),0); 
+  const concl = rows.filter(x=>clean(x['Status'])==='Concluído').length; 
+  const pend = rows.filter(x=>clean(x['Status']) !== 'Concluído').length; 
+  const qual = rows.filter(x=>clean(x['Ação'])==='Treinamento').length; 
+  document.getElementById('kpiHours').textContent = fmtHM(hours); 
+  document.getElementById('kpiEff').textContent = pct(rows.length ? concl/rows.length : 0); 
+  document.getElementById('kpiPend').textContent = pend; 
+  document.getElementById('kpiQual').textContent = qual;  
+  
+  const dept = groupCount(rows, 'Departamento'); 
+  const labels = dept.map(x=>x[0]); 
+  const vals = dept.map(x=>x[1]); 
+  
+  if(deptChart) deptChart.destroy(); 
+  deptChart = new Chart(document.getElementById('deptChart'), {
+    type:'bar', 
+    data:{labels,datasets:[{label:'Tarefas', data:vals, borderWidth:1, borderColor:'rgba(0,229,255,.95)', backgroundColor:'rgba(0,229,255,.55)', borderRadius:10}]}, 
+    options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{callbacks:{label:(c)=>` ${c.raw} registros`}}}, scales:{x:{ticks:{color:'#dff7ff'}, grid:{color:'rgba(154,178,201,.10)'}}, y:{beginAtZero:true, ticks:{color:'#dff7ff', precision:0}, grid:{color:'rgba(154,178,201,.10)'}}}}
+  });  
+  
+  const prod = rows.filter(x=>clean(x['Ação'])!=='Treinamento').reduce((a,x)=>a+parseDuration(x['Duração']),0); 
+  const train = rows.filter(x=>clean(x['Ação'])==='Treinamento').reduce((a,x)=>a+parseDuration(x['Duração']),0); 
+  if(mixChart) mixChart.destroy(); 
+  mixChart = new Chart(document.getElementById('mixChart'), {
+    type:'doughnut', 
+    data:{labels:['Produção','Treinamento'], datasets:[{data:[prod,train], backgroundColor:['rgba(0,229,255,.9)','rgba(255,255,255,.75)'], borderColor:['#0a1636','#0a1636'], borderWidth:3}]}, 
+    options:{responsive:true, maintainAspectRatio:false, cutout:'68%', plugins:{legend:{position:'bottom', labels:{color:'#f6fbff'}}, tooltip:{callbacks:{label:(c)=>` ${c.label}: ${fmtHM(c.raw)}`}}}}
+  });  
+  
+  const bottlenecks = rows.filter(x=>clean(x['Status']) !== 'Concluído').sort((a,b)=>{ 
+    const da=parseDateBR(a.Data)||new Date(0), db=parseDateBR(b.Data)||new Date(0); return db-da; 
+  }).slice(0,10).map(x=>({ 'Colaborador':clean(x['Colaborador']), 'Departamento':clean(x['Departamento'])||'-', 'Ação':clean(x['Ação'])||'-', 'Data':clean(x['Data'])||'-', 'Duração':clean(x['Duração']) ? fmtHM(parseDuration(x['Duração'])) : '-', 'Status':clean(x['Status']) || 'Sem status', 'Anotações':clean(x['Anotações']) || '-' }));  
+  renderTable(document.getElementById('bottleneckTable'), ['Colaborador','Departamento','Ação','Data','Duração','Status','Anotações'], bottlenecks);
+}
+function renderIndividual(rows){ 
+  const techs = [...new Set(rawData.map(x=>clean(x['Colaborador'])).filter(Boolean))]; 
+  const tech = document.getElementById('techFilter').value || techs[0] || ''; 
+  if(!document.getElementById('techFilter').value && tech) document.getElementById('techFilter').value = tech; 
+  
+  const stats = techStats(rows, tech); 
+  document.getElementById('techEff').textContent = pct(stats.eff); 
+  document.getElementById('techHours').textContent = fmtHM(stats.secs); 
+  document.getElementById('techProc').textContent = stats.procs; 
+  document.getElementById('techActs').textContent = stats.total;  
+  
+  const ranking = techs.map(t=>({t, ...techStats(rows,t)})).sort((a,b)=>b.eff-a.eff || b.total-a.total || a.t.localeCompare(b.t,'pt-BR'));  
+  document.getElementById('rankingList').innerHTML = ranking.length ? ranking.map((r,i)=>`<div class="rank-item"><div class="rank-num">${i+1}</div><div><div class="rank-name">${r.t}</div><div class="rank-meta">${r.total} registros • ${r.procs} procedimentos • ${fmtHM(r.secs)}</div></div><div class="pill ${r.eff>=0.8?'ok':'bad'}">${pct(r.eff)}</div></div>`).join('') : '<div class="empty">Sem técnicos disponíveis.</div>';  
+  
+  const history = rows.filter(x=>clean(x['Colaborador'])===tech).sort((a,b)=>{ 
+    const da=parseDateBR(a.Data)||new Date(0), db=parseDateBR(b.Data)||new Date(0); return db-da; 
+  }).map(x=>({ 'Data':clean(x['Data'])||'-', 'Departamento':clean(x['Departamento'])||'-', 'Ação':clean(x['Ação'])||'-', 'Instrumento Calibrado':clean(x['Instrumento Calibrado'])||'-', 'Procedimentos Executados':clean(x['Procedimentos Executados'])||'-', 'Período':clean(x['Período'])||'-', 'Duração':clean(x['Duração']) ? fmtHM(parseDuration(x['Duração'])) : '-', 'Status':clean(x['Status'])||'Sem status', 'Anotações':clean(x['Anotações'])||'-' }));  
+  renderTable(document.getElementById('historyTable'), ['Data','Departamento','Ação','Instrumento Calibrado','Procedimentos Executados','Período','Duração','Status','Anotações'], history);
+}
+function renderAll(){ 
+  const rows = currentRows(); filtered = rows; 
+  document.getElementById('statusBar').textContent = `Registros carregados: ${rawData.length} | Filtrados: ${rows.length}`; 
+  if(activeTab==='general') renderGeneral(rows); else renderIndividual(rows); 
+}
+function setTab(tab){ 
+  activeTab = tab; 
+  document.querySelectorAll('.btn[data-tab]').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab)); 
+  document.getElementById('generalTab').classList.toggle('hidden', tab!=='general'); 
+  document.getElementById('individualTab').classList.toggle('hidden', tab!=='individual'); 
+  renderAll(); 
+}
+
+// Função de Atualização Manual
+async function manualRefresh() {
+  const btn = document.getElementById('refreshBtn');
+  btn.innerHTML = '<span>⏳</span> Atualizando...';
+  btn.disabled = true;
+  
+  await loadData();
+  
+  setTimeout(() => {
+    btn.innerHTML = '<span>🔄</span> Atualizar Dados';
+    btn.disabled = false;
+  }, 800); // pequeno delay para feedback visual
+}
+
+async function loadData(){ 
+  // Cache busting via query string
+  const url = `${LIVE_URL}&cb=${new Date().getTime()}`;
+  try{ 
+    const text = await fetch(url, {cache:'no-store'}).then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); }); 
+    const rows = parseCSV(text); const headers = rows[0].map(clean); 
+    rawData = rows.slice(1).filter(r=>r.some(v=>clean(v))).map(r=>{ const o={}; headers.forEach((h,i)=>o[h]=clean(r[i]||'')); return normalizeRow(o); }); 
+    document.getElementById('statusBar').textContent = 'Dados carregados ao vivo da planilha.'; 
+  } catch(e){ 
+    const rows = parseCSV(FALLBACK_CSV); const headers = rows[0].map(clean); 
+    rawData = rows.slice(1).filter(r=>r.some(v=>clean(v))).map(r=>{ const o={}; headers.forEach((h,i)=>o[h]=clean(r[i]||'')); return normalizeRow(o); }); 
+    document.getElementById('statusBar').textContent = 'Falha no fetch ao vivo; usando fallback embutido com os dados atuais da planilha.'; 
+  }  
+  const techs = [...new Set(rawData.map(x=>clean(x['Colaborador'])).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR')); 
+  const techSel = document.getElementById('techFilter'); 
+  techSel.innerHTML = techs.map(t=>`<option value="${t}">${t}</option>`).join(''); 
+  if(techs[0]) techSel.value = techs[0]; renderAll(); 
+}
+
+document.querySelectorAll('.btn[data-tab]').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.tab)));
+document.getElementById('periodFilter').addEventListener('change', renderAll);
+document.getElementById('techFilter').addEventListener('change', ()=>{ if(activeTab==='individual') renderAll(); });
+loadData();
+</script>
+</body>
+</html>
